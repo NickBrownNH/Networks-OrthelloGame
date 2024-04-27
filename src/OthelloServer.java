@@ -1,33 +1,73 @@
 import java.net.*;
 import java.io.*;
+import java.util.concurrent.*;
 
-public class OthelloServer {
-    public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(3333);
-        System.out.println("Server started. Waiting for connection...");
-        Socket clientSocket = serverSocket.accept();
-        System.out.println("Client connected.");
+class OthelloHandler implements Runnable {
+    private Socket clientSocket;
+    private OthelloGame game;
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+    public OthelloHandler(Socket socket) {
+        this.clientSocket = socket;
+        this.game = new OthelloGame();
+    }
 
-        OthelloGame game = new OthelloGame();
-        out.println(game.displayBoardAsString());
+    @Override
+    public void run() {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-            try {
+            out.println(game.displayBoardAsString());
+            out.println("END OF BOARD");
+            out.flush();
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null && !game.isGameOver()) {
                 int move = Integer.parseInt(inputLine);
-                String response = game.processMove(move);
-                out.println(response);
-            } catch (NumberFormatException e) {
-                out.println("Please enter a valid number.");
+                String response = game.processMove(move);  // Assume this returns a string now
+
+                if (response.startsWith("Invalid move")) {
+                    out.println(response);
+                } else {
+                    game.computerMove();  // Let the computer make a move if player's move was valid
+                }
+
+                out.println(game.displayBoardAsString());
+                out.println("END OF BOARD");
+
+                if (game.isGameOver()) {
+                    String winnerMessage = "Game over. Winner: " + game.getWinnerText();
+                    out.println(winnerMessage);
+                    break;
+                }
+            }
+            out.flush();
+        } catch (IOException e) {
+            System.err.println("Error handling client: " + e.getMessage());
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                System.err.println("Error closing client socket: " + e.getMessage());
             }
         }
+    }
+}
 
-        in.close();
-        out.close();
-        clientSocket.close();
-        serverSocket.close();
+    public class OthelloServer {
+    public static void main(String[] args) {
+        int port = 3333;
+        ExecutorService pool = Executors.newCachedThreadPool();
+
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server is running on port " + port);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                pool.submit(new OthelloHandler(clientSocket));
+            }
+        } catch (IOException e) {
+            System.err.println("Server exception: " + e.getMessage());
+        } finally {
+            pool.shutdown();
+        }
     }
 }

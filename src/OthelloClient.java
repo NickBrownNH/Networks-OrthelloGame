@@ -1,30 +1,34 @@
 import java.net.*;
 import java.io.*;
-import java.util.*;
+import java.util.Scanner;
 
 public class OthelloClient {
-    public static void main(String[] args) throws IOException {
-        Socket socket = new Socket("localhost", 3333);
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-        Scanner scanner = new Scanner(System.in);
+    public static void main(String[] args) {
+        String host = "localhost";
+        int port = 3333;
 
-        String fromServer;
-        while ((fromServer = in.readLine()) != null) {
-            System.out.println("Server: " + fromServer);
-            if (fromServer.contains("Game over")) {
-                break;
+        try (Socket socket = new Socket(host, port);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner scanner = new Scanner(System.in)) {
+
+            String fromServer;
+            while ((fromServer = in.readLine()) != null) {
+                if (fromServer.equals("END OF BOARD")) {
+                    System.out.println("Enter your move (number space): ");
+                    String userMove = scanner.nextLine();
+                    out.println(userMove);
+                } else if (fromServer.startsWith("Game over")) {
+                    System.out.println(fromServer);
+                    break;
+                } else {
+                    System.out.println(fromServer);
+                }
             }
-            System.out.print("Enter your move: ");
-            String fromUser = scanner.nextLine();
-            if (fromUser != null) {
-                out.println(fromUser);
-            }
+        } catch (UnknownHostException e) {
+            System.err.println("Host not found: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("I/O Error: " + e.getMessage());
         }
-
-        scanner.close();
-        in.close();
-        out.close();
-        socket.close();
     }
 }
