@@ -205,8 +205,4 @@ public class OthelloGame {
             return "Draw";
         }
     }
-
-
-
-
 }
