@@ -1,3 +1,4 @@
+//Nick presents OthelloGame class
 import java.util.ArrayList;
 import java.util.List;
 
@@ -6,7 +7,7 @@ public class OthelloGame {
     public static final char COMPUTER = 'X';
     private static final char EMPTY = '.';
     private char[][] board;
-    private int size = 4;  // Typically Othello is played on an 8x8 board
+    private int size = 4;  // Typically Othello is played on a 8x8 board
 
     public OthelloGame() {
         board = new char[size][size];
@@ -30,7 +31,7 @@ public class OthelloGame {
         }
         sb.append("+\n");
         for (int i = 0; i < size; i++) {
-            sb.append((i+1) + " |");
+            sb.append(" |");
             for (int j = 0; j < size; j++) {
                 if (board[i][j] == EMPTY) {
                     sb.append(String.format("%2d ", cellNumber));
