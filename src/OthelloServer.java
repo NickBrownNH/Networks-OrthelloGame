@@ -21,7 +21,14 @@ class OthelloHandler implements Runnable {
             out.println("END OF BOARD"); // Used to indicate the end of the board for the client reader
 
             String inputLine;
-            while ((inputLine = in.readLine()) != null && !game.isGameOver()) {
+            while ((inputLine = in.readLine()) != null) {
+                if (game.isGameOver()) { // Checks if the game is over
+                    String winnerMessage = "Game over. Winner: " + game.getWinnerText(); // Makes the winner string and decides who won by running the ...
+                    //      getWinnerText function from the game object
+
+                    out.println(winnerMessage); // Sends out this message to the client
+                    break; // This breaks out of the game loop
+                }
                 int move = Integer.parseInt(inputLine); // Sets the move what was given for the inputLine
                 String response = game.processMove(move);  // Processes a move that will either update the game board or print out an error
 
@@ -34,18 +41,14 @@ class OthelloHandler implements Runnable {
                 out.println(game.displayBoardAsString()); //Prints out new game board with user's move and computers move now updated
                 out.println("END OF BOARD"); //Used to indicate the end of the board for the client reader
 
-                if (game.isGameOver()) { // Checks if the game is over
-                    String winnerMessage = "Game over. Winner: " + game.getWinnerText(); // Makes the winner string and decides who won by running the ...
-                                                                                        //      getWinnerText function from the game object
 
-                    out.println(winnerMessage); // Sends out this message to the client
-                    break; // This breaks out of the game loop
-                }
             }
             out.flush(); // This flushes out the PrintWriter object out to ensure no problems when sending over multiple messages
         } catch (IOException e) { // Catches an IOException if one occurs
             System.err.println("Error handling client: " + e.getMessage());
-        } finally {
+         }
+
+        finally {
             try { // Tries to close the client socket
                 clientSocket.close();
             } catch (IOException e) { // Catches an IOException if one occurs
